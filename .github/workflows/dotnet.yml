@@ -5,7 +5,7 @@ on:
 env:
   App_Name: onetime-password-app
   Solution_Path: onetime-password-app.generated.sln
-  App_Project_Path: onetime-password-app.csproj
+  App_Project_Path: onetime-password-app/onetime-password-app.csproj
 
 jobs:
   build:
