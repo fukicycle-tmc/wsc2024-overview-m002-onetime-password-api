@@ -1,0 +1,85 @@
+﻿@page "/"
+@using onetime_password_app.Services
+@implements IDisposable
+@inject UserListService UserListService
+@inject OneTimePasswordService OneTimePasswordService
+
+<PageTitle>One time password</PageTitle>
+<section>
+    <h1>One time password provider</h1>
+    <p>Please select an user.</p>
+    <div>
+        <select disabled=@(_generatedPassword != null) @bind=@_selectedId>
+            <option selected disabled>---</option>
+            @foreach (var user in _users)
+            {
+                <option value=@user.Guid>@user.Fullname</option>
+            }
+        </select>
+    </div>
+</section>
+@if (_selectedId != null)
+{
+    <section>
+    <button disabled=@(_generatedPassword != null) @onclick="GenerateButtonOnClick">Generate one time password.</button>
+</section>
+}
+@if (_generatedPassword != null)
+{
+    <section>
+    <h2>Your password.</h2>
+    <p>@_generatedPassword.Password</p>
+    <p>Remain <span>@_remain</span></p>
+</section>
+}
+@code {
+    private System.Timers.Timer _timer = new System.Timers.Timer(1000);
+    private Guid? _selectedId = null;
+    private int _remain = 30;
+    private OneTimePasswordRecord? _generatedPassword = null;
+    private IEnumerable<UserRecord> _users = Enumerable.Empty<UserRecord>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _timer.Elapsed += (s, e) =>
+        {
+            InvokeAsync(() =>
+    {
+    _remain = Diff();
+    StateHasChanged();
+            });
+        };
+        _users = UserListService.Get();
+    }
+
+    private void GenerateButtonOnClick()
+    {
+        if (_selectedId == null)
+        {
+            return;
+        }
+        _generatedPassword = OneTimePasswordService.Generate(_selectedId.Value);
+        _timer.Start();
+    }
+
+    private int Diff()
+    {
+        if (_generatedPassword != null && _selectedId.HasValue)
+        {
+            _remain--;
+            if (_remain <= 0)
+            {
+                _remain = 30;
+                _generatedPassword = OneTimePasswordService.Generate(_selectedId.Value);
+            }
+            return _remain;
+        }
+        return 0;
+    }
+
+    public void Dispose()
+    {
+        _timer.Dispose();
+    }
+}
