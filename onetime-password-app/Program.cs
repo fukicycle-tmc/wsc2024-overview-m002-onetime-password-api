@@ -4,6 +4,7 @@ using onetime_password_app.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.WebHost.UseUrls("http://0.0.0.0:5000/");
 builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddCircuitOptions(options =>
